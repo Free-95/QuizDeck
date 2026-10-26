@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuizDeck - turn lecture slides into practice</title>
+  <meta name="description" content="Upload a lecture PDF and get cloze quizzes and an N-gram study assistant built from your own slides.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='3' fill='%23ffe14d' stroke='%23101828' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    try { const t = localStorage.getItem('qd-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <a class="brand" href="/" aria-label="QuizDeck home">
+      <svg class="mark" viewBox="0 0 36 36" aria-hidden="true">
+        <rect x="9" y="3" width="22" height="26" rx="4" class="m-back"/>
+        <rect x="5" y="7" width="22" height="26" rx="4" class="m-mid"/>
+        <rect x="1.5" y="10" width="22" height="24" rx="4" class="m-front"/>
+        <path d="M6 20h13" class="m-line"/><path d="M6 26h8" class="m-line"/>
+      </svg>
+      <span>QuizDeck</span>
+    </a>
+    <div class="top-actions">
+      <button class="btn ghost small" id="btn-new" hidden>Upload another deck</button>
+      <button class="icon-btn" id="btn-theme" aria-label="Toggle light and dark theme" title="Toggle theme">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ───────── Upload view ───────── -->
+    <section id="view-upload" class="hero">
+      <div class="hero-copy">
+        <h1>Your slides, turned into practice you can actually do.</h1>
+        <p class="lede">Drop in a lecture PDF. QuizDeck finds the terms that matter, hides them in fill-in-the-blank questions, and lets you check your own notes against the deck.</p>
+
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a lecture PDF to upload">
+          <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+          <div class="drop-idle" id="drop-idle">
+            <svg viewBox="0 0 48 48" width="40" height="40" aria-hidden="true"><path d="M14 6h14l8 8v26a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M28 6v8h8M24 35V22m0 0-5 5m5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <strong>Drop a lecture PDF here</strong>
+            <span>or click to browse. Text-based PDFs up to 25 MB.</span>
+          </div>
+          <div class="drop-busy" id="drop-busy" hidden>
+            <p class="busy-file" id="busy-file"></p>
+            <ol class="steps" id="steps"></ol>
+          </div>
+        </div>
+        <p class="error" id="upload-error" role="alert" hidden></p>
+      </div>
+
+      <figure class="demo" aria-label="Example question">
+        <div class="demo-card">
+          <p class="demo-meta">Slide 12 &middot; Tokenization</p>
+          <p class="demo-q">Byte-Pair Encoding is a <span class="blank" id="demo-blank">_____</span> tokenization algorithm that iteratively merges adjacent character pairs.</p>
+          <div class="demo-opts" id="demo-opts">
+            <button type="button" data-v="subword"><b>A</b>subword</button>
+            <button type="button" data-v="characterwise"><b>B</b>characterwise</button>
+            <button type="button" data-v="morphological"><b>C</b>morphological</button>
+            <button type="button" data-v="whitespace"><b>D</b>whitespace</button>
+          </div>
+          <p class="demo-note" id="demo-note">Try it. Wrong choices are built from similar subword pieces, so they look plausible.</p>
+        </div>
+        <div class="demo-shadow s1"></div><div class="demo-shadow s2"></div>
+      </figure>
+    </section>
+
+    <!-- ───────── Workspace view ───────── -->
+    <section id="view-work" hidden>
+      <div class="deckbar">
+        <div>
+          <p class="deck-label">Current deck</p>
+          <h2 id="deck-name"></h2>
+        </div>
+        <dl class="stats" id="stats"></dl>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Study modes">
+        <button role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true">Overview</button>
+        <button role="tab" id="tab-quiz" aria-controls="panel-quiz" aria-selected="false">Quiz</button>
+        <button role="tab" id="tab-lm" aria-controls="panel-lm" aria-selected="false">Notes assistant</button>
+      </div>
+
+      <div id="panel-overview" class="panel" role="tabpanel" aria-labelledby="tab-overview"></div>
+      <div id="panel-quiz" class="panel" role="tabpanel" aria-labelledby="tab-quiz" hidden></div>
+      <div id="panel-lm" class="panel" role="tabpanel" aria-labelledby="tab-lm" hidden></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
