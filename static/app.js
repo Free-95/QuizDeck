@@ -305,7 +305,7 @@
         missed.length ? h('div', { class: 'review' }, h('h4', {}, 'To review'), missed.map((r) =>
           h('div', { class: 'review-item' },
             (() => { const p2 = promptNode(r.q.prompt, r.answer); p2.className = ''; return p2; })(),
-            h('p', { class: 'sub' }, `Slide ${r.q.slide} \u00b7 ${r.q.topic}. You chose ${r.q.options[r.picked]}. ${r.explanation}`)))) : null);
+            h('p', { class: 'sub' }, `Slide ${r.q.slide} \u00b7 ${r.q.topic}. You chose ${r.q.options[r.picked]}. ${r.explanation}`)))) : '');
     }
 
     if (keyHandlers.quiz) document.removeEventListener('keydown', keyHandlers.quiz);
