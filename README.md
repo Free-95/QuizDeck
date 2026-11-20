@@ -3,7 +3,7 @@
 Lecture-slide PDF to cloze quiz and an N-gram notes assistant.
 Backend: Flask + pypdf + spaCy + scikit-learn + NLTK. Frontend: plain HTML/CSS/JS (no build step).
 
-## Modules (as in the project spec)
+## Modules
 | Module | File |
 |---|---|
 | 1 Document ingestion | `quizdeck/ingestion.py` |
